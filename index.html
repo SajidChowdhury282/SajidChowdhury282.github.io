@@ -1,10 +1,800 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>sajidchowdhury.github.io</title>
-    </head>
-    <body>
-        <h1>Hello World</h1>
-        <p>testing</p>
-    </body>
+<head>
+    <title>Rugby Budget Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .dashboard {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background-color: #1a4784;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .widget {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 15px;
+        }
+        .widget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .widget-title {
+            margin: 0;
+            color: #1a4784;
+        }
+        .widget-body {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .row {
+            display: flex;
+            gap: 20px;
+        }
+        .col {
+            flex: 1;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+        .category {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .variable {
+            background-color: #ffecb3;
+            color: #ff8f00;
+        }
+        .constant {
+            background-color: #c8e6c9;
+            color: #2e7d32;
+        }
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+        select, input {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .flex-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .summary-item {
+            background-color: #f2f2f2;
+            padding: 15px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .summary-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .summary-label {
+            font-size: 14px;
+            color: #666;
+        }
+        .positive {
+            color: #2e7d32;
+        }
+        .negative {
+            color: #c62828;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            background-color: #1a4784;
+            color: white;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #0d2b50;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <h1>Men's Rugby Budget Dashboard (FY25-26)</h1>
+        </div>
+        
+        <div class="widget">
+            <div class="widget-header">
+                <h2 class="widget-title">Budget Summary</h2>
+                <div class="controls">
+                    <select id="fiscalYearSelect">
+                        <option value="FY25">FY25</option>
+                        <option value="FY26">FY26 (Projected)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="widget-body">
+                <div class="row">
+                    <div class="col summary-item">
+                        <div class="summary-label">Total Income</div>
+                        <div class="summary-value positive" id="totalIncome">$54,253.21</div>
+                    </div>
+                    <div class="col summary-item">
+                        <div class="summary-label">Total Expenses</div>
+                        <div class="summary-value negative" id="totalExpenses">$35,010.42</div>
+                    </div>
+                    <div class="col summary-item">
+                        <div class="summary-label">Net Balance</div>
+                        <div class="summary-value positive" id="netBalance">$19,242.79</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="summaryChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col">
+                <div class="widget">
+                    <div class="widget-header">
+                        <h2 class="widget-title">Income Sources</h2>
+                        <div class="controls">
+                            <select id="incomeChartType">
+                                <option value="pie">Pie Chart</option>
+                                <option value="bar">Bar Chart</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="widget-body">
+                        <div class="chart-container">
+                            <canvas id="incomeChart"></canvas>
+                        </div>
+                        <table id="incomeTable">
+                            <thead>
+                                <tr>
+                                    <th>Income Source</th>
+                                    <th>Amount</th>
+                                    <th>Category</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Income data will be inserted here via JavaScript -->
+                            </tbody>
+                        </table>
+                        <div class="flex-container">
+                            <button class="btn" id="addIncomeBtn">Add Income</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col">
+                <div class="widget">
+                    <div class="widget-header">
+                        <h2 class="widget-title">Expenses Breakdown</h2>
+                        <div class="controls">
+                            <select id="expenseChartType">
+                                <option value="pie">Pie Chart</option>
+                                <option value="bar">Bar Chart</option>
+                            </select>
+                            <select id="expenseCategory">
+                                <option value="all">All Categories</option>
+                                <option value="variable">Variable Costs</option>
+                                <option value="constant">Constant Costs</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="widget-body">
+                        <div class="chart-container">
+                            <canvas id="expenseChart"></canvas>
+                        </div>
+                        <table id="expenseTable">
+                            <thead>
+                                <tr>
+                                    <th>Expense Item</th>
+                                    <th>Amount</th>
+                                    <th>Cost Type</th>
+                                    <th>Category</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Expense data will be inserted here via JavaScript -->
+                            </tbody>
+                        </table>
+                        <div class="flex-container">
+                            <button class="btn" id="addExpenseBtn">Add Expense</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="widget">
+            <div class="widget-header">
+                <h2 class="widget-title">Year-over-Year Budget Comparison</h2>
+            </div>
+            <div class="widget-body">
+                <div class="chart-container">
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for adding/editing expenses -->
+    <div id="expenseModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000;">
+        <div style="background-color: white; width: 400px; padding: 20px; margin: 100px auto; border-radius: 8px;">
+            <h3>Add/Edit Expense</h3>
+            <div style="margin-bottom: 10px;">
+                <label>Description:</label>
+                <input type="text" id="expenseDescription" style="width: 100%;">
+            </div>
+            <div style="margin-bottom: 10px;">
+                <label>Amount ($):</label>
+                <input type="number" id="expenseAmount" style="width: 100%;">
+            </div>
+            <div style="margin-bottom: 10px;">
+                <label>Cost Type:</label>
+                <select id="expenseCostType" style="width: 100%;">
+                    <option value="variable">Variable Cost</option>
+                    <option value="constant">Constant Cost</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 10px;">
+                <label>Category:</label>
+                <select id="expenseCategorySelect" style="width: 100%;">
+                    <option value="Transportation">Transportation</option>
+                    <option value="Equipment">Equipment</option>
+                    <option value="Membership">Membership</option>
+                    <option value="Officials">Officials</option>
+                    <option value="Uniforms">Uniforms</option>
+                    <option value="Travel">Travel</option>
+                    <option value="Events">Events</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <button id="cancelExpenseBtn" class="btn" style="background-color: #ccc;">Cancel</button>
+                <button id="saveExpenseBtn" class="btn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for adding/editing income -->
+    <div id="incomeModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000;">
+        <div style="background-color: white; width: 400px; padding: 20px; margin: 100px auto; border-radius: 8px;">
+            <h3>Add/Edit Income</h3>
+            <div style="margin-bottom: 10px;">
+                <label>Description:</label>
+                <input type="text" id="incomeDescription" style="width: 100%;">
+            </div>
+            <div style="margin-bottom: 10px;">
+                <label>Amount ($):</label>
+                <input type="number" id="incomeAmount" style="width: 100%;">
+            </div>
+            <div style="margin-bottom: 10px;">
+                <label>Category:</label>
+                <select id="incomeCategorySelect" style="width: 100%;">
+                    <option value="Allocation">Co-Curricular Allocation</option>
+                    <option value="Dues">Dues</option>
+                    <option value="Gifts">Gifts</option>
+                    <option value="Fundraising">Fundraising</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <button id="cancelIncomeBtn" class="btn" style="background-color: #ccc;">Cancel</button>
+                <button id="saveIncomeBtn" class="btn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Define color palette
+        const colors = [
+            '#1a4784', // Primary blue
+            '#2e7d32', // Green
+            '#ff8f00', // Orange
+            '#c62828', // Red
+            '#6a1b9a', // Purple
+            '#00838f', // Teal
+            '#558b2f', // Light green
+            '#ef6c00', // Dark orange
+            '#5d4037', // Brown
+            '#546e7a'  // Blue grey
+        ];
+
+        // Initialize data
+        let incomeData = {
+            FY25: [
+                { description: 'Co-Curricular Allocation', amount: 15000, category: 'Allocation' },
+                { description: 'Fundraising Account (Dues)', amount: 16248, category: 'Dues' },
+                { description: 'Gift Account', amount: 23005.21, category: 'Gifts' }
+            ],
+            FY26: [
+                { description: 'Carry Forward from FY25', amount: 19242.79, category: 'Other' },
+                { description: 'Co-Curricular Allocation', amount: 15000, category: 'Allocation' },
+                { description: 'Anticipated Gift (Agreement)', amount: 5000, category: 'Gifts' }
+            ]
+        };
+
+        let expenseData = {
+            FY25: [
+                { description: 'Veo Camera Subscription', amount: 1790, costType: 'constant', category: 'Equipment' },
+                { description: 'Hale Bus', amount: 10400, costType: 'variable', category: 'Transportation' },
+                { description: 'National Collegiate Rugby', amount: 4817, costType: 'constant', category: 'Membership' },
+                { description: 'Liberty Rugby Conference', amount: 1500, costType: 'constant', category: 'Membership' },
+                { description: 'Videographer', amount: 1500, costType: 'variable', category: 'Other' },
+                { description: 'NYS Rugby Referees', amount: 800, costType: 'variable', category: 'Officials' },
+                { description: 'Individual Referees', amount: 390, costType: 'variable', category: 'Officials' },
+                { description: 'Recruitment Registration', amount: 100, costType: 'constant', category: 'Other' },
+                { description: 'Akuma Uniform/Kits', amount: 10227.90, costType: 'variable', category: 'Uniforms' },
+                { description: 'International Service Charge', amount: 228.12, costType: 'constant', category: 'Other' },
+                { description: 'Akuma Freight', amount: 129.62, costType: 'variable', category: 'Uniforms' },
+                { description: 'Akuma Added Uniforms', amount: 328, costType: 'variable', category: 'Uniforms' },
+                { description: 'Fairfield Hotel', amount: 695.92, costType: 'variable', category: 'Travel' },
+                { description: 'Ottawa Hotel', amount: 718.98, costType: 'variable', category: 'Travel' },
+                { description: 'Additional Videographer', amount: 225, costType: 'variable', category: 'Other' },
+                { description: 'Fundraising Dinner Event (Net Cost)', amount: 1388, costType: 'variable', category: 'Events' }
+            ],
+            FY26: []
+        };
+
+        // Chart instances
+        let summaryChart;
+        let incomeChart;
+        let expenseChart;
+        let comparisonChart;
+
+        // Selected fiscal year
+        let selectedYear = 'FY25';
+
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update tables
+            updateIncomeTables();
+            updateExpenseTables();
+            
+            // Initialize charts
+            initializeCharts();
+            updateAllCharts();
+            
+            // Set up event listeners
+            setupEventListeners();
+        });
+
+        function updateIncomeTables() {
+            const tableBody = document.getElementById('incomeTable').getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = '';
+            
+            incomeData[selectedYear].forEach((item, index) => {
+                const row = tableBody.insertRow();
+                
+                const cellDesc = row.insertCell(0);
+                cellDesc.textContent = item.description;
+                
+                const cellAmount = row.insertCell(1);
+                cellAmount.textContent = `$${item.amount.toFixed(2)}`;
+                
+                const cellCategory = row.insertCell(2);
+                cellCategory.textContent = item.category;
+                
+                // Add edit functionality if needed
+                row.addEventListener('click', () => {
+                    // Edit income item logic
+                });
+            });
+        }
+
+        function updateExpenseTables() {
+            const tableBody = document.getElementById('expenseTable').getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = '';
+            
+            const categoryFilter = document.getElementById('expenseCategory').value;
+            
+            const filteredExpenses = expenseData[selectedYear].filter(expense => {
+                if (categoryFilter === 'all') return true;
+                return expense.costType === categoryFilter;
+            });
+            
+            filteredExpenses.forEach((item, index) => {
+                const row = tableBody.insertRow();
+                
+                const cellDesc = row.insertCell(0);
+                cellDesc.textContent = item.description;
+                
+                const cellAmount = row.insertCell(1);
+                cellAmount.textContent = `$${item.amount.toFixed(2)}`;
+                
+                const cellCostType = row.insertCell(2);
+                const costTypeSpan = document.createElement('span');
+                costTypeSpan.className = `category ${item.costType}`;
+                costTypeSpan.textContent = item.costType.charAt(0).toUpperCase() + item.costType.slice(1);
+                cellCostType.appendChild(costTypeSpan);
+                
+                const cellCategory = row.insertCell(3);
+                cellCategory.textContent = item.category;
+                
+                // Add edit functionality if needed
+                row.addEventListener('click', () => {
+                    // Edit expense item logic
+                });
+            });
+        }
+
+        function initializeCharts() {
+            // Summary Chart
+            const summaryCtx = document.getElementById('summaryChart').getContext('2d');
+            summaryChart = new Chart(summaryCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Income', 'Expenses', 'Balance'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: [colors[1], colors[3], colors[0]],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `$${context.raw.toFixed(2)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Income Chart
+            const incomeCtx = document.getElementById('incomeChart').getContext('2d');
+            incomeChart = new Chart(incomeCtx, {
+                type: 'pie',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: colors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `$${value.toFixed(2)} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Expense Chart
+            const expenseCtx = document.getElementById('expenseChart').getContext('2d');
+            expenseChart = new Chart(expenseCtx, {
+                type: 'pie',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: colors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `$${value.toFixed(2)} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Comparison Chart
+            const comparisonCtx = document.getElementById('comparisonChart').getContext('2d');
+            comparisonChart = new Chart(comparisonCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Income', 'Expenses', 'Balance'],
+                    datasets: [
+                        {
+                            label: 'FY25',
+                            data: [0, 0, 0],
+                            backgroundColor: colors[0],
+                            borderWidth: 0
+                        },
+                        {
+                            label: 'FY26 (Projected)',
+                            data: [0, 0, 0],
+                            backgroundColor: colors[1],
+                            borderWidth: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': $' + context.raw.toFixed(2);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateSummaryChart() {
+            const totalIncome = incomeData[selectedYear].reduce((sum, item) => sum + item.amount, 0);
+            const totalExpenses = expenseData[selectedYear].reduce((sum, item) => sum + item.amount, 0);
+            const balance = totalIncome - totalExpenses;
+            
+            document.getElementById('totalIncome').textContent = `$${totalIncome.toFixed(2)}`;
+            document.getElementById('totalExpenses').textContent = `$${totalExpenses.toFixed(2)}`;
+            document.getElementById('netBalance').textContent = `$${balance.toFixed(2)}`;
+            
+            summaryChart.data.datasets[0].data = [totalIncome, totalExpenses, balance];
+            summaryChart.update();
+        }
+
+        function updateIncomeChart() {
+            const chartType = document.getElementById('incomeChartType').value;
+            incomeChart.config.type = chartType;
+            
+            // Group income by category
+            const categorizedIncome = {};
+            incomeData[selectedYear].forEach(item => {
+                if (!categorizedIncome[item.category]) {
+                    categorizedIncome[item.category] = 0;
+                }
+                categorizedIncome[item.category] += item.amount;
+            });
+            
+            const labels = Object.keys(categorizedIncome);
+            const data = labels.map(label => categorizedIncome[label]);
+            
+            incomeChart.data.labels = labels;
+            incomeChart.data.datasets[0].data = data;
+            
+            incomeChart.update();
+        }
+
+        function updateExpenseChart() {
+            const chartType = document.getElementById('expenseChartType').value;
+            const categoryFilter = document.getElementById('expenseCategory').value;
+            
+            expenseChart.config.type = chartType;
+            
+            // Filter expenses if needed
+            const filteredExpenses = expenseData[selectedYear].filter(expense => {
+                if (categoryFilter === 'all') return true;
+                return expense.costType === categoryFilter;
+            });
+            
+            // Group expenses by category
+            const categorizedExpenses = {};
+            filteredExpenses.forEach(item => {
+                if (!categorizedExpenses[item.category]) {
+                    categorizedExpenses[item.category] = 0;
+                }
+                categorizedExpenses[item.category] += item.amount;
+            });
+            
+            const labels = Object.keys(categorizedExpenses);
+            const data = labels.map(label => categorizedExpenses[label]);
+            
+            expenseChart.data.labels = labels;
+            expenseChart.data.datasets[0].data = data;
+            
+            expenseChart.update();
+        }
+
+        function updateComparisonChart() {
+            const fy25Income = incomeData['FY25'].reduce((sum, item) => sum + item.amount, 0);
+            const fy25Expenses = expenseData['FY25'].reduce((sum, item) => sum + item.amount, 0);
+            const fy25Balance = fy25Income - fy25Expenses;
+            
+            const fy26Income = incomeData['FY26'].reduce((sum, item) => sum + item.amount, 0);
+            const fy26Expenses = expenseData['FY26'].reduce((sum, item) => sum + item.amount, 0);
+            const fy26Balance = fy26Income - fy26Expenses;
+            
+            comparisonChart.data.datasets[0].data = [fy25Income, fy25Expenses, fy25Balance];
+            comparisonChart.data.datasets[1].data = [fy26Income, fy26Expenses, fy26Balance];
+            
+            comparisonChart.update();
+        }
+
+        function updateAllCharts() {
+            updateSummaryChart();
+            updateIncomeChart();
+            updateExpenseChart();
+            updateComparisonChart();
+        }
+
+        function setupEventListeners() {
+            // Fiscal year selection
+            document.getElementById('fiscalYearSelect').addEventListener('change', function() {
+                selectedYear = this.value;
+                updateIncomeTables();
+                updateExpenseTables();
+                updateAllCharts();
+            });
+            
+            // Chart type changes
+            document.getElementById('incomeChartType').addEventListener('change', updateIncomeChart);
+            document.getElementById('expenseChartType').addEventListener('change', updateExpenseChart);
+            
+            // Expense category filter
+            document.getElementById('expenseCategory').addEventListener('change', function() {
+                updateExpenseTables();
+                updateExpenseChart();
+            });
+            
+            // Add expense button
+            document.getElementById('addExpenseBtn').addEventListener('click', function() {
+                document.getElementById('expenseModal').style.display = 'block';
+            });
+            
+            // Cancel expense button
+            document.getElementById('cancelExpenseBtn').addEventListener('click', function() {
+                document.getElementById('expenseModal').style.display = 'none';
+            });
+            
+            // Save expense button
+            document.getElementById('saveExpenseBtn').addEventListener('click', function() {
+                const description = document.getElementById('expenseDescription').value;
+                const amount = parseFloat(document.getElementById('expenseAmount').value);
+                const costType = document.getElementById('expenseCostType').value;
+                const category = document.getElementById('expenseCategorySelect').value;
+                
+                if (description && !isNaN(amount)) {
+                    expenseData[selectedYear].push({
+                        description,
+                        amount,
+                        costType,
+                        category
+                    });
+                    
+                    document.getElementById('expenseModal').style.display = 'none';
+                    updateExpenseTables();
+                    updateSummaryChart();
+                    updateExpenseChart();
+                    updateComparisonChart();
+                    
+                    // Clear fields
+                    document.getElementById('expenseDescription').value = '';
+                    document.getElementById('expenseAmount').value = '';
+                }
+            });
+            
+            // Add income button
+            document.getElementById('addIncomeBtn').addEventListener('click', function() {
+                document.getElementById('incomeModal').style.display = 'block';
+            });
+            
+            // Cancel income button
+            document.getElementById('cancelIncomeBtn').addEventListener('click', function() {
+                document.getElementById('incomeModal').style.display = 'none';
+            });
+            
+            // Save income button
+            document.getElementById('saveIncomeBtn').addEventListener('click', function() {
+                const description = document.getElementById('incomeDescription').value;
+                const amount = parseFloat(document.getElementById('incomeAmount').value);
+                const category = document.getElementById('incomeCategorySelect').value;
+                
+                if (description && !isNaN(amount)) {
+                    incomeData[selectedYear].push({
+                        description,
+                        amount,
+                        category
+                    });
+                    
+                    document.getElementById('incomeModal').style.display = 'none';
+                    updateIncomeTables();
+                    updateSummaryChart();
+                    updateIncomeChart();
+                    updateComparisonChart();
+                    
+                    // Clear fields
+                    document.getElementById('incomeDescription').value = '';
+                    document.getElementById('incomeAmount').value = '';
+                }
+            });
+        }
+
+        // Function to export to CSV (could be added if needed)
+        function exportToCSV() {
+            // Export logic
+        }
+    </script>
+</body>
 </html>
